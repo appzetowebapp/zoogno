@@ -52,12 +52,8 @@ class ApiService {
       
       final requestBody = {
         'token': token,
-        'fcmToken': token,
-        'fcmTokenMobile': token, // Added based on user object schema
-        'platform': 'mobile',
-        'deviceType': Platform.isAndroid ? 'android' : 'ios',
-        'phone': phone,
-        'userId': storedUserId ?? phone,
+        'platform': 'app',
+        
       };
 
       // Validate token

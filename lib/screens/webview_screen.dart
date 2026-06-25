@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -61,9 +62,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
       },
     );
 
-    _checkConnectivity();
+    // _checkConnectivity();
     _initializeNotifications();
-    _listenToConnectivityChanges();
+    // _listenToConnectivityChanges();
   }
 
   @override
@@ -588,7 +589,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                           urlString.includes('/auth/customer/verify-sms-otp') ||
                           urlString.includes('login') ||
                           urlString.includes('signin') ||
-                          urlString.includes('/auth/user/verify-otp');
+                          urlString.includes('/customer/verify-otp');
             
             // Call original fetch
             try {
@@ -638,7 +639,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         url.includes('/auth/customer/verify-sms-otp') ||
                         url.includes('login') ||
                         url.includes('signin') ||
-                        url.includes('/auth/user/verify-otp'));
+                        url.includes('/customer/verify-otp'));
 
             if (isLogin) {
                console.log('[API Interceptor] Potential XHR login request detected: ' + url);
@@ -722,93 +723,207 @@ class _WebViewScreenState extends State<WebViewScreen> {
       );
 
       // Add Handler for Login Response
-      controller.addJavaScriptHandler(
-        handlerName: 'captureLoginResponse',
-        callback: (args) async {
-          debugPrint('📥 captureLoginResponse handler triggered');
-          if (args.isNotEmpty) {
-            try {
-              final data =
-                  jsonDecode(args[0].toString()) as Map<String, dynamic>;
-              debugPrint('🔐 Captured Login/Signup Response for URL: ${data['url']}');
-              debugPrint('🔐 Response Body: ${data['body']}');
+      // controller.addJavaScriptHandler(
+      //   handlerName: 'captureLoginResponse',
+      //   callback: (args) async {
+      //     debugPrint('📥 captureLoginResponse handler triggered');
+      //     if (args.isNotEmpty) {
+      //       try {
+      //         final data =
+      //             jsonDecode(args[0].toString()) as Map<String, dynamic>;
+      //         debugPrint('🔐 Captured Login/Signup Response for URL: ${data['url']}');
+      //         debugPrint('🔐 Response Body: ${data['body']}');
 
-              final body = data['body'];
-              if (body != null && body is Map) {
-                String? accessToken = body['accessToken']?.toString();
-                if (accessToken == null && body['token'] != null) {
-                  accessToken = body['token'].toString();
-                }
+      //         final body = data['body'];
+      //         if (body != null && body is Map) {
+      //           String? accessToken = body['token']?.toString();
+      //           if (accessToken == null && body['token'] != null) {
+      //             accessToken = body['token'].toString();
+      //           }
                 
-                // Fallback for nested data structure
-                if (accessToken == null && body['data'] != null && body['data'] is Map) {
-                  accessToken = body['data']['accessToken']?.toString() ?? 
-                               body['data']['token']?.toString();
-                }
+      //           // Fallback for nested data structure
+      //           if (accessToken == null && body['data'] != null && body['data'] is Map) {
+      //             accessToken = body['data']['token']?.toString() ?? 
+      //                          body['data']['token']?.toString();
+      //           }
 
-                if (accessToken != null && accessToken.isNotEmpty) {
-                  debugPrint('✅ Found Access Token! Saving to preferences...');
-                  await PrefsUtil.setAccessToken(accessToken);
+      //           if (accessToken != null && accessToken.isNotEmpty) {
+      //             debugPrint('✅ Found Access Token! Saving to preferences...');
+      //             await PrefsUtil.setAccessToken(accessToken);
 
-                  // Extract User Phone and ID
-                  String? phone;
-                  String? userId;
+      //             // Extract User Phone and ID
+      //             String? phone;
+      //             String? userId;
 
-                  if (body['user'] != null && body['user'] is Map) {
-                    final userObj = body['user'];
-                    userId = userObj['_id']?.toString();
-                    phone = userObj['mobileNumber']?.toString() ??
-                        userObj['phone']?.toString() ??
-                        userObj['phoneNumber']?.toString();
-                  }
+      //             if (body['user'] != null && body['user'] is Map) {
+      //               final userObj = body['user'];
+      //               userId = userObj['_id']?.toString();
+      //               phone = userObj['mobileNumber']?.toString() ??
+      //                   userObj['phone']?.toString() ??
+      //                   userObj['phoneNumber']?.toString();
+      //             }
 
-                  if (phone == null && body['data'] != null && body['data'] is Map) {
-                    final dataObj = body['data'];
-                    if (dataObj['user'] != null && dataObj['user'] is Map) {
-                      final userObj = dataObj['user'];
-                      userId ??= userObj['_id']?.toString();
-                      phone = userObj['mobileNumber']?.toString() ??
-                          userObj['phoneNumber']?.toString() ??
-                          userObj['phone']?.toString();
-                    }
-                    if (phone == null) {
-                      phone = dataObj['mobileNumber']?.toString() ??
-                          dataObj['phoneNumber']?.toString() ??
-                          dataObj['phone']?.toString();
-                    }
-                  }
+      //             if (phone == null && body['data'] != null && body['data'] is Map) {
+      //               final dataObj = body['data'];
+      //               if (dataObj['user'] != null && dataObj['user'] is Map) {
+      //                 final userObj = dataObj['user'];
+      //                 userId ??= userObj['_id']?.toString();
+      //                 phone = userObj['mobileNumber']?.toString() ??
+      //                     userObj['phoneNumber']?.toString() ??
+      //                     userObj['phone']?.toString();
+      //               }
+      //               if (phone == null) {
+      //                 phone = dataObj['mobileNumber']?.toString() ??
+      //                     dataObj['phoneNumber']?.toString() ??
+      //                     dataObj['phone']?.toString();
+      //               }
+      //             }
 
-                  if (userId != null) {
-                    debugPrint('🆔 Found User ID: $userId');
-                    await PrefsUtil.setUserId(userId);
-                  }
+      //             if (userId != null) {
+      //               debugPrint('🆔 Found User ID: $userId');
+      //               await PrefsUtil.setUserId(userId);
+      //             }
 
-                  if (phone != null) {
-                    debugPrint('📱 Found Phone Number: $phone');
-                    String cleanedPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
-                    if (cleanedPhone.length > 10 && cleanedPhone.startsWith('91')) {
-                      cleanedPhone = cleanedPhone.substring(2);
-                    }
-                    await PrefsUtil.setPhoneNumber(cleanedPhone);
-                  } else {
-                    debugPrint('⚠️ Access token found but could not extract phone number from response');
-                  }
+      //             if (phone != null) {
+      //               debugPrint('📱 Found Phone Number: $phone');
+      //               String cleanedPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
+      //               if (cleanedPhone.length > 10 && cleanedPhone.startsWith('91')) {
+      //                 cleanedPhone = cleanedPhone.substring(2);
+      //               }
+      //               await PrefsUtil.setPhoneNumber(cleanedPhone);
+      //             } else {
+      //               debugPrint('⚠️ Access token found but could not extract phone number from response');
+      //             }
 
-                  // Trigger FCM Token Save
-                  debugPrint('🚀 Triggering FCM token save...');
-                  await _saveFCMTokenIfPhoneAvailable();
-                } else {
-                  debugPrint('⚠️ Captured login response but no access token found');
-                }
-              }
-            } catch (e) {
-              debugPrint('❌ Error parsing login/signup response: $e');
-            }
-          } else {
-            debugPrint('⚠️ captureLoginResponse triggered but args were empty');
-          }
-        },
-      );
+      //             // Trigger FCM Token Save
+      //             debugPrint('🚀 Triggering FCM token save...');
+      //             await _saveFCMTokenIfPhoneAvailable();
+      //           } else {
+      //             debugPrint('⚠️ Captured login response but no access token found');
+      //           }
+      //         }
+      //       } catch (e) {
+      //         debugPrint('❌ Error parsing login/signup response: $e');
+      //       }
+      //     } else {
+      //       debugPrint('⚠️ captureLoginResponse triggered but args were empty');
+      //     }
+      //   },
+      // );
+
+
+      controller.addJavaScriptHandler(
+  handlerName: 'captureLoginResponse',
+  callback: (args) async {
+    debugPrint('📥 captureLoginResponse handler triggered');
+
+    if (args.isEmpty) {
+      debugPrint('⚠️ captureLoginResponse triggered but args were empty');
+      return;
+    }
+
+    try {
+      final data =
+          jsonDecode(args[0].toString()) as Map<String, dynamic>;
+
+      debugPrint(
+          '🔐 Captured Login/Signup Response for URL: ${data['url']}');
+      debugPrint('🔐 Response Body: ${data['body']}');
+
+      // Some APIs wrap response in body, some don't
+      final Map<String, dynamic> body =
+          (data['body'] is Map<String, dynamic>)
+              ? data['body'] as Map<String, dynamic>
+              : data;
+
+      // =========================
+      // TOKEN EXTRACTION
+      // =========================
+      String? accessToken =
+          body['token']?.toString() ??
+          body['data']?['token']?.toString() ??
+          body['result']?['token']?.toString();
+
+      if (accessToken == null || accessToken.isEmpty) {
+        debugPrint('⚠️ Captured login response but no access token found');
+        return;
+      }
+
+      debugPrint('✅ Found Access Token! Saving to preferences...');
+      await PrefsUtil.setAccessToken(accessToken);
+
+      // =========================
+      // USER / CUSTOMER / SELLER
+      // =========================
+      Map<String, dynamic>? userObj;
+
+      if (body['user'] is Map) {
+        userObj = Map<String, dynamic>.from(body['user']);
+      } else if (body['data']?['user'] is Map) {
+        userObj = Map<String, dynamic>.from(body['data']['user']);
+      } else if (body['result']?['customer'] is Map) {
+        userObj = Map<String, dynamic>.from(body['result']['customer']);
+      } else if (body['result']?['seller'] is Map) {
+        userObj = Map<String, dynamic>.from(body['result']['seller']);
+      }
+
+      String? userId;
+      String? phone;
+
+      if (userObj != null) {
+        userId = userObj['_id']?.toString();
+
+        phone = userObj['mobileNumber']?.toString() ??
+            userObj['phoneNumber']?.toString() ??
+            userObj['phone']?.toString();
+      }
+
+      // =========================
+      // SAVE USER ID
+      // =========================
+      if (userId != null && userId.isNotEmpty) {
+        debugPrint('🆔 Found User ID: $userId');
+        await PrefsUtil.setUserId(userId);
+      } else {
+        debugPrint('⚠️ User ID not found');
+      }
+
+      // =========================
+      // SAVE PHONE NUMBER
+      // =========================
+      if (phone != null && phone.isNotEmpty) {
+        debugPrint('📱 Raw Phone Number: $phone');
+
+        String cleanedPhone =
+            phone.replaceAll(RegExp(r'[^\d]'), '');
+
+        // Remove India country code if present
+        if (cleanedPhone.length > 10 &&
+            cleanedPhone.startsWith('91')) {
+          cleanedPhone = cleanedPhone.substring(2);
+        }
+
+        debugPrint('📱 Cleaned Phone Number: $cleanedPhone');
+
+        await PrefsUtil.setPhoneNumber(cleanedPhone);
+      } else {
+        debugPrint(
+            '⚠️ Access token found but could not extract phone number');
+      }
+
+      // =========================
+      // SAVE FCM TOKEN
+      // =========================
+      debugPrint('🚀 Triggering FCM token save...');
+      await _saveFCMTokenIfPhoneAvailable();
+
+      debugPrint('✅ Login data saved successfully');
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error parsing login/signup response: $e');
+      debugPrint('📍 StackTrace: $stackTrace');
+    }
+  },
+);
 
       debugPrint('✅ API interceptor script injected successfully');
     } catch (e) {
@@ -1255,6 +1370,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         body: SafeArea(
+           top: false,
+           bottom: false,
           child: _isOnline
               ? Stack(
                   children: [
@@ -1286,6 +1403,15 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         useOnLoadResource: true,
                         useShouldOverrideUrlLoading: true,
                       ),
+                      // Offline
+                      onReceivedError: (controller, request, error){
+                        debugPrint(request.toString());
+                        if(request.isForMainFrame == true || request.url.toString().endsWith('.js')){
+                          setState(() {
+                          _isOnline = false;
+                        });
+                        }
+                      },
                       onCreateWindow: (controller, createWindowRequest) async {
                         final urlRequest = createWindowRequest.request;
                         var url = urlRequest.url;
@@ -1485,6 +1611,38 @@ class _WebViewScreenState extends State<WebViewScreen> {
                             return {'success': false};
                           },
                         );
+                         controller.addJavaScriptHandler(
+                          handlerName: 'openGallery',
+                          callback: (args) async {
+                            debugPrint('📷 openGallery called');
+
+                            final ImagePicker picker = ImagePicker();
+
+                            try {
+                              final XFile? image = await picker.pickImage(
+                                source: ImageSource.gallery,
+                                imageQuality: 80,
+                              );
+
+                              if (image != null) {
+                                final bytes = await image.readAsBytes();
+                                final base64String = base64Encode(bytes);
+
+                                return {
+                                  'success': true,
+                                  'base64': base64String,
+                                  'mimeType': 'image/jpeg',
+                                  'fileName': image.name,
+                                };
+                              }
+                            } catch (e) {
+                              debugPrint('❌ Error in openGallery handler: $e');
+                            }
+
+                            return {'success': false};
+                          },
+                        );
+
 
                         // Add JavaScript handler to receive phone number from website
                         controller.addJavaScriptHandler(

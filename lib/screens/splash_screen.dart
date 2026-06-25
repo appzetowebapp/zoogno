@@ -9,6 +9,7 @@ import 'package:webview_master_app/utils/notification_service.dart';
 
 import 'package:webview_master_app/screens/webview_screen.dart';
 
+
 /// Splash Screen - Shows logo and app name for configured duration
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -91,6 +92,9 @@ class _SplashScreenState extends State<SplashScreen>
     // Request permissions early for better UX
     await _requestInitialPermissions();
 
+    // swati Start overlay service (Display over other apps)
+    // await SystemOverlayService.startOverlay();
+
     // Navigate directly to WebViewScreen
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -130,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light, // Light icons for dark bg
         statusBarBrightness: Brightness.dark, // for iOS
-        systemNavigationBarColor: Color(0xFFB3B3B3), // Dark nav bar
+        systemNavigationBarColor: Color(0xFF1A1F4D), // Dark nav bar
         systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
@@ -140,9 +144,10 @@ class _SplashScreenState extends State<SplashScreen>
         children: [
           // 1. Deep Navy Gradient Background
           Container(
-            decoration: const BoxDecoration(color: Color(0xFFB3B3B3)),
-          ),
-
+  decoration: const BoxDecoration(
+    color: Color(0xFF012710),
+  ),
+),
           // 2. Animated Floating Soft Glows
           AnimatedBuilder(
             animation: _backgroundController,
@@ -150,47 +155,48 @@ class _SplashScreenState extends State<SplashScreen>
               return Stack(
                 children: [
                   // Pink Abstract Shape (Top Left)
-                  Positioned(
-                    top: -100 + (_backgroundController.value * 20),
-                    left: -50 + (_backgroundController.value * 10),
-                    child: Opacity(
-                      opacity: 0.15,
-                      child: Container(
-                        width: 300,
-                        height: 300,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Color(0xFFB3B3B3), // Accent Pink
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Positioned(
+                  //   top: -100 + (_backgroundController.value * 20),
+                  //   left: -50 + (_backgroundController.value * 10),
+                  //   child: Opacity(
+                  //     opacity: 0.15,
+                  //     child: Container(
+                  //       width: 300,
+                  //       height: 300,
+                  //       decoration: const BoxDecoration(
+                  //         shape: BoxShape.circle,
+                  //         gradient: RadialGradient(
+                  //           colors: [
+                  //             Color(0xFFf91a30), // Accent Pink
+                  //             Colors.transparent,
+                  //           ],
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+
                   // Cyan/Teal Abstract Shape (Bottom Right)
-                  Positioned(
-                    bottom: -80 - (_backgroundController.value * 20),
-                    right: -40 - (_backgroundController.value * 10),
-                    child: Opacity(
-                      opacity: 0.1,
-                      child: Container(
-                        width: 400,
-                        height: 400,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Color(0xFFB3B3B3),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Positioned(
+                  //   bottom: -80 - (_backgroundController.value * 20),
+                  //   right: -40 - (_backgroundController.value * 10),
+                  //   child: Opacity(
+                  //     opacity: 0.1,
+                  //     child: Container(
+                  //       width: 400,
+                  //       height: 400,
+                  //       decoration: BoxDecoration(
+                  //         shape: BoxShape.circle,
+                  //         gradient: RadialGradient(
+                  //           colors: [
+                  //             Color(0xFFf91a30),
+                  //             Colors.transparent,
+                  //           ],
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               );
             },
@@ -212,48 +218,55 @@ class _SplashScreenState extends State<SplashScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Card/Container for Logo
-                        Container(
-                          width: 180,
-                          height: 180,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 30,
-                                offset: const Offset(0, 10),
-                              ),
-                              BoxShadow(
-                                color: const Color(0xFFB3B3B3).withOpacity(0.3),
-                                blurRadius: 50,
-                                spreadRadius: -10,
-                                offset: const Offset(0, 0),
-                              ),
-                            ],
-                          ),
-                          // Display Logo
-                          child: ClipOval(
-                            child: Image.asset(
-                              AppConfig.appLogoPath,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
+                        // Container(
+                        //   width: 200,
+                        //   height: 200,
+                        //   padding: const EdgeInsets.all(20),
+                        //   decoration: BoxDecoration(
+                        //     shape: BoxShape.circle,
+                        //     color: Colors.white,
+                        //     boxShadow: [
+                        //       BoxShadow(
+                        //         color: Colors.black.withOpacity(0.2),
+                        //         blurRadius: 30,
+                        //         offset: const Offset(0, 10),
+                        //       ),
+                        //       BoxShadow(
+                        //         color: const Color(0xFFf91a30).withOpacity(0.3),
+                        //         blurRadius: 50,
+                        //         spreadRadius: -10,
+                        //         offset: const Offset(0, 0),
+                        //       ),
+                        //     ],
+                        //   ),
+                        //   // Display Logo
+                        //   child: ClipOval(
+                        //     child: Image.asset(
+                        //       AppConfig.appLogoPath,
+                        //       fit: BoxFit.contain,
+                        //     ),
+                        //   ),
+                        // ),
+                        Image.asset(
+                          AppConfig.appLogoPath,
+                          fit: BoxFit.contain,
+                          width: 200,
+                          height: 200,
                         ),
                         const SizedBox(height: 30),
                         // Typography
-                        const Text(
-                          AppConfig.appName,
-                          style: TextStyle(
-                            fontFamily:
-                                'Inter', // Fallback to default if not available
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 4.0, // Increased spacing
-                            color: Colors.white,
-                          ),
-                        ),
+
+                        // Text(
+                        //   AppConfig.appName,
+                        //   style: TextStyle(
+                        //     fontFamily:
+                        //         'Inter', // Fallback to default if not available
+                        //     fontSize: 22,
+                        //     fontWeight: FontWeight.bold,
+                        //     letterSpacing: 4.0, // Increased spacing
+                        //     color: Colors.white,
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

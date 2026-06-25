@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// All settings are documented inline for easy customization.
 class AppConfig {
   // ==================== APP IDENTITY ====================
-  static const String appName = 'Switcheats';
+  static const String appName = 'zoogno';
   static const String appLogoPath = 'assets/images/logo.png';
 
   // ==================== COLORS & THEME ====================
@@ -56,7 +56,7 @@ class AppConfig {
 
   // ==================== WEB URL CONFIGURATION ====================
   // ⚠️ CHANGE THIS URL TO YOUR WEB APPLICATION ⚠️
-  static const String webUrl = 'https://switcheats.com/food/user';
+  static const String webUrl = 'https://zoogno.com/';
 
   static const String notificationIcon =
       '@mipmap/ic_launcher'; // Default app launcher icon
@@ -78,11 +78,11 @@ class AppConfig {
   // ==================== API CONFIGURATION ====================
   // Base URL for API endpoints (update this with your actual API base URL)
   // static const String apiBaseUrl = 'https://www.majdoorsathi.com/api/';
-  static const String apiBaseUrl = 'https://switcheats.com/api';
+  static const String apiBaseUrl = 'https://zoogno.com/api';
   // https://api.majdoorsathi.com/api/auth/verify-otp
   static const String fcmTokenUrl =
      
-      'https://switcheats.com/api/v1/fcm-tokens/mobile/save';
+      'https://zoogno.com/api/push/register';
 
   // ==================== SPLASH SCREEN ====================
   static const int splashDurationSeconds = 2;

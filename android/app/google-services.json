@@ -1,22 +1,21 @@
 {
   "project_info": {
-    "project_number": "495091502782",
-    "firebase_url": "https://switcheats-2aff2-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "switcheats-2aff2",
-    "storage_bucket": "switcheats-2aff2.firebasestorage.app"
+    "project_number": "718332070646",
+    "project_id": "zoogno-96f97",
+    "storage_bucket": "zoogno-96f97.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:495091502782:android:7cdc0976684254089f18ef",
+        "mobilesdk_app_id": "1:718332070646:android:97d2598a82e156333f7ad7",
         "android_client_info": {
-          "package_name": "com.switcheats.delivery"
+          "package_name": "com.zoogno.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDbvls3C97OMgQ1xIjkjM_fnf8ofpoJT6Q"
+          "current_key": "AIzaSyAkdErpLEcO80nNdqoxXatU_8usWtFzpq4"
         }
       ],
       "services": {
@@ -27,15 +26,15 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:495091502782:android:9f9eda217b22f2149f18ef",
+        "mobilesdk_app_id": "1:718332070646:android:d12cd5d800a17c063f7ad7",
         "android_client_info": {
-          "package_name": "com.switcheats.restaurant"
+          "package_name": "com.zoogno.deliveryapp"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDbvls3C97OMgQ1xIjkjM_fnf8ofpoJT6Q"
+          "current_key": "AIzaSyAkdErpLEcO80nNdqoxXatU_8usWtFzpq4"
         }
       ],
       "services": {
@@ -46,15 +45,15 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:495091502782:android:15b1c8ea802d489f9f18ef",
+        "mobilesdk_app_id": "1:718332070646:android:9245615558847a523f7ad7",
         "android_client_info": {
-          "package_name": "com.switcheats.user"
+          "package_name": "com.zoogno.sellerapp"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDbvls3C97OMgQ1xIjkjM_fnf8ofpoJT6Q"
+          "current_key": "AIzaSyAkdErpLEcO80nNdqoxXatU_8usWtFzpq4"
         }
       ],
       "services": {

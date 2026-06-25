@@ -1,4 +1,4 @@
-package com.zoogno.user
+package com.zoogno.app
 
 import android.Manifest
 import android.content.pm.PackageManager
