@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:webview_master_app/config/app_config.dart';
 import 'package:webview_master_app/config/theme_config.dart';
 import 'package:webview_master_app/screens/splash_screen.dart';
+import 'package:webview_master_app/screens/webview_screen.dart';
 import 'package:webview_master_app/utils/prefs_util.dart';
 import 'package:webview_master_app/utils/fcm_background_handler.dart';
 import 'package:webview_master_app/utils/notification_service.dart';
@@ -52,8 +53,12 @@ void main() async {
       systemNavigationBarColor: AppConfig.navigationBarColorLight,
       systemNavigationBarIconBrightness:
           AppConfig.navigationBarIconBrightnessLight,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
     ),
   );
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   runApp(const MyApp());
 }
@@ -96,7 +101,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _themeMode,
 
       // Home screen
-      home: const SplashScreen(),
+      home: const WebViewScreen(),
 
       // Builder for additional configuration
       builder: (context, child) {
