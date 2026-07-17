@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:app_links/app_links.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -38,6 +39,10 @@ class _WebViewScreenState extends State<WebViewScreen> {
   bool _linkInterceptorInjected = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+  String? _initialLink;
+
   // Track pending download requests from API calls
   final Map<String, Map<String, dynamic>> _pendingDownloadRequests = {};
 
@@ -65,10 +70,39 @@ class _WebViewScreenState extends State<WebViewScreen> {
     // _checkConnectivity();
     _initializeNotifications();
     // _listenToConnectivityChanges();
+    _initAppLinks();
+  }
+
+  Future<void> _initAppLinks() async {
+    _appLinks = AppLinks();
+
+    // Handle incoming links while app is running
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint('🔗 App Link received: $uri');
+      if (_webViewController != null) {
+        _webViewController!
+            .loadUrl(urlRequest: URLRequest(url: WebUri(uri.toString())));
+      } else {
+        _initialLink = uri.toString();
+        if (mounted) setState(() {});
+      }
+    });
+
+    // Handle initial link if app was closed
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        debugPrint('🔗 Initial App Link: $initialUri');
+        _initialLink = initialUri.toString();
+      }
+    } catch (e) {
+      debugPrint('❌ Error handling initial app link: $e');
+    }
   }
 
   @override
   void dispose() {
+    _linkSubscription?.cancel();
     _connectivitySubscription?.cancel();
     super.dispose();
   }
@@ -150,8 +184,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
     try {
       final phoneNumber = PrefsUtil.getPhoneNumber();
       final accessToken = PrefsUtil.getAccessToken();
-      
-      debugPrint('📱 Current Prefs: Phone=$phoneNumber, HasToken=${accessToken != null && accessToken.isNotEmpty}');
+
+      debugPrint(
+          '📱 Current Prefs: Phone=$phoneNumber, HasToken=${accessToken != null && accessToken.isNotEmpty}');
 
       if (phoneNumber != null && phoneNumber.isNotEmpty) {
         debugPrint('📱 Phone number found, saving FCM token to backend...');
@@ -164,7 +199,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
           debugPrint('⚠️ Failed to save FCM token');
         }
       } else {
-        debugPrint('⚠️ Phone number NOT found in preferences. Cannot save FCM token yet.');
+        debugPrint(
+            '⚠️ Phone number NOT found in preferences. Cannot save FCM token yet.');
       }
     } catch (e) {
       debugPrint('❌ Error in _saveFCMTokenIfPhoneAvailable: $e');
@@ -740,10 +776,10 @@ class _WebViewScreenState extends State<WebViewScreen> {
       //           if (accessToken == null && body['token'] != null) {
       //             accessToken = body['token'].toString();
       //           }
-                
+
       //           // Fallback for nested data structure
       //           if (accessToken == null && body['data'] != null && body['data'] is Map) {
-      //             accessToken = body['data']['token']?.toString() ?? 
+      //             accessToken = body['data']['token']?.toString() ??
       //                          body['data']['token']?.toString();
       //           }
 
@@ -811,119 +847,115 @@ class _WebViewScreenState extends State<WebViewScreen> {
       //   },
       // );
 
-
       controller.addJavaScriptHandler(
-  handlerName: 'captureLoginResponse',
-  callback: (args) async {
-    debugPrint('📥 captureLoginResponse handler triggered');
+        handlerName: 'captureLoginResponse',
+        callback: (args) async {
+          debugPrint('📥 captureLoginResponse handler triggered');
 
-    if (args.isEmpty) {
-      debugPrint('⚠️ captureLoginResponse triggered but args were empty');
-      return;
-    }
+          if (args.isEmpty) {
+            debugPrint('⚠️ captureLoginResponse triggered but args were empty');
+            return;
+          }
 
-    try {
-      final data =
-          jsonDecode(args[0].toString()) as Map<String, dynamic>;
+          try {
+            final data = jsonDecode(args[0].toString()) as Map<String, dynamic>;
 
-      debugPrint(
-          '🔐 Captured Login/Signup Response for URL: ${data['url']}');
-      debugPrint('🔐 Response Body: ${data['body']}');
+            debugPrint(
+                '🔐 Captured Login/Signup Response for URL: ${data['url']}');
+            debugPrint('🔐 Response Body: ${data['body']}');
 
-      // Some APIs wrap response in body, some don't
-      final Map<String, dynamic> body =
-          (data['body'] is Map<String, dynamic>)
-              ? data['body'] as Map<String, dynamic>
-              : data;
+            // Some APIs wrap response in body, some don't
+            final Map<String, dynamic> body =
+                (data['body'] is Map<String, dynamic>)
+                    ? data['body'] as Map<String, dynamic>
+                    : data;
 
-      // =========================
-      // TOKEN EXTRACTION
-      // =========================
-      String? accessToken =
-          body['token']?.toString() ??
-          body['data']?['token']?.toString() ??
-          body['result']?['token']?.toString();
+            // =========================
+            // TOKEN EXTRACTION
+            // =========================
+            String? accessToken = body['token']?.toString() ??
+                body['data']?['token']?.toString() ??
+                body['result']?['token']?.toString();
 
-      if (accessToken == null || accessToken.isEmpty) {
-        debugPrint('⚠️ Captured login response but no access token found');
-        return;
-      }
+            if (accessToken == null || accessToken.isEmpty) {
+              debugPrint(
+                  '⚠️ Captured login response but no access token found');
+              return;
+            }
 
-      debugPrint('✅ Found Access Token! Saving to preferences...');
-      await PrefsUtil.setAccessToken(accessToken);
+            debugPrint('✅ Found Access Token! Saving to preferences...');
+            await PrefsUtil.setAccessToken(accessToken);
 
-      // =========================
-      // USER / CUSTOMER / SELLER
-      // =========================
-      Map<String, dynamic>? userObj;
+            // =========================
+            // USER / CUSTOMER / SELLER
+            // =========================
+            Map<String, dynamic>? userObj;
 
-      if (body['user'] is Map) {
-        userObj = Map<String, dynamic>.from(body['user']);
-      } else if (body['data']?['user'] is Map) {
-        userObj = Map<String, dynamic>.from(body['data']['user']);
-      } else if (body['result']?['customer'] is Map) {
-        userObj = Map<String, dynamic>.from(body['result']['customer']);
-      } else if (body['result']?['seller'] is Map) {
-        userObj = Map<String, dynamic>.from(body['result']['seller']);
-      }
+            if (body['user'] is Map) {
+              userObj = Map<String, dynamic>.from(body['user']);
+            } else if (body['data']?['user'] is Map) {
+              userObj = Map<String, dynamic>.from(body['data']['user']);
+            } else if (body['result']?['customer'] is Map) {
+              userObj = Map<String, dynamic>.from(body['result']['customer']);
+            } else if (body['result']?['seller'] is Map) {
+              userObj = Map<String, dynamic>.from(body['result']['seller']);
+            }
 
-      String? userId;
-      String? phone;
+            String? userId;
+            String? phone;
 
-      if (userObj != null) {
-        userId = userObj['_id']?.toString();
+            if (userObj != null) {
+              userId = userObj['_id']?.toString();
 
-        phone = userObj['mobileNumber']?.toString() ??
-            userObj['phoneNumber']?.toString() ??
-            userObj['phone']?.toString();
-      }
+              phone = userObj['mobileNumber']?.toString() ??
+                  userObj['phoneNumber']?.toString() ??
+                  userObj['phone']?.toString();
+            }
 
-      // =========================
-      // SAVE USER ID
-      // =========================
-      if (userId != null && userId.isNotEmpty) {
-        debugPrint('🆔 Found User ID: $userId');
-        await PrefsUtil.setUserId(userId);
-      } else {
-        debugPrint('⚠️ User ID not found');
-      }
+            // =========================
+            // SAVE USER ID
+            // =========================
+            if (userId != null && userId.isNotEmpty) {
+              debugPrint('🆔 Found User ID: $userId');
+              await PrefsUtil.setUserId(userId);
+            } else {
+              debugPrint('⚠️ User ID not found');
+            }
 
-      // =========================
-      // SAVE PHONE NUMBER
-      // =========================
-      if (phone != null && phone.isNotEmpty) {
-        debugPrint('📱 Raw Phone Number: $phone');
+            // =========================
+            // SAVE PHONE NUMBER
+            // =========================
+            if (phone != null && phone.isNotEmpty) {
+              debugPrint('📱 Raw Phone Number: $phone');
 
-        String cleanedPhone =
-            phone.replaceAll(RegExp(r'[^\d]'), '');
+              String cleanedPhone = phone.replaceAll(RegExp(r'[^\d]'), '');
 
-        // Remove India country code if present
-        if (cleanedPhone.length > 10 &&
-            cleanedPhone.startsWith('91')) {
-          cleanedPhone = cleanedPhone.substring(2);
-        }
+              // Remove India country code if present
+              if (cleanedPhone.length > 10 && cleanedPhone.startsWith('91')) {
+                cleanedPhone = cleanedPhone.substring(2);
+              }
 
-        debugPrint('📱 Cleaned Phone Number: $cleanedPhone');
+              debugPrint('📱 Cleaned Phone Number: $cleanedPhone');
 
-        await PrefsUtil.setPhoneNumber(cleanedPhone);
-      } else {
-        debugPrint(
-            '⚠️ Access token found but could not extract phone number');
-      }
+              await PrefsUtil.setPhoneNumber(cleanedPhone);
+            } else {
+              debugPrint(
+                  '⚠️ Access token found but could not extract phone number');
+            }
 
-      // =========================
-      // SAVE FCM TOKEN
-      // =========================
-      debugPrint('🚀 Triggering FCM token save...');
-      await _saveFCMTokenIfPhoneAvailable();
+            // =========================
+            // SAVE FCM TOKEN
+            // =========================
+            debugPrint('🚀 Triggering FCM token save...');
+            await _saveFCMTokenIfPhoneAvailable();
 
-      debugPrint('✅ Login data saved successfully');
-    } catch (e, stackTrace) {
-      debugPrint('❌ Error parsing login/signup response: $e');
-      debugPrint('📍 StackTrace: $stackTrace');
-    }
-  },
-);
+            debugPrint('✅ Login data saved successfully');
+          } catch (e, stackTrace) {
+            debugPrint('❌ Error parsing login/signup response: $e');
+            debugPrint('📍 StackTrace: $stackTrace');
+          }
+        },
+      );
 
       debugPrint('✅ API interceptor script injected successfully');
     } catch (e) {
@@ -1370,14 +1402,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         body: SafeArea(
-           top: false,
-           bottom: false,
+          top: false,
+          bottom: false,
           child: _isOnline
               ? Stack(
                   children: [
                     InAppWebView(
                       initialUrlRequest: URLRequest(
-                        url: WebUri(AppConfig.webUrl),
+                        url: WebUri(_initialLink ?? AppConfig.webUrl),
                       ),
                       pullToRefreshController: _pullToRefreshController,
                       initialSettings: InAppWebViewSettings(
@@ -1404,12 +1436,13 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         useShouldOverrideUrlLoading: true,
                       ),
                       // Offline
-                      onReceivedError: (controller, request, error){
+                      onReceivedError: (controller, request, error) {
                         debugPrint(request.toString());
-                        if(request.isForMainFrame == true || request.url.toString().endsWith('.js')){
+                        if (request.isForMainFrame == true ||
+                            request.url.toString().endsWith('.js')) {
                           setState(() {
-                          _isOnline = false;
-                        });
+                            _isOnline = false;
+                          });
                         }
                       },
                       onCreateWindow: (controller, createWindowRequest) async {
@@ -1611,7 +1644,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                             return {'success': false};
                           },
                         );
-                         controller.addJavaScriptHandler(
+                        controller.addJavaScriptHandler(
                           handlerName: 'openGallery',
                           callback: (args) async {
                             debugPrint('📷 openGallery called');
@@ -1642,7 +1675,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
                             return {'success': false};
                           },
                         );
-
 
                         // Add JavaScript handler to receive phone number from website
                         controller.addJavaScriptHandler(

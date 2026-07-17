@@ -67,6 +67,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!-- Deep linking / App Links for zoogno.com -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="zoogno.com" />
+                <data android:scheme="https" android:host="zoogno.com" />
+                <data android:scheme="http" android:host="www.zoogno.com" />
+                <data android:scheme="https" android:host="www.zoogno.com" />
+            </intent-filter>
         </activity>
         
         <!-- Don't delete the meta-data below.
