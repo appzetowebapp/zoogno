@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:app_links/app_links.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -49,18 +50,24 @@ class _WebViewScreenState extends State<WebViewScreen> {
   // Track API request bodies captured from JavaScript
   final Map<String, String> _apiRequestBodies = {};
   late final PullToRefreshController _pullToRefreshController;
+  late final AudioPlayer _audioPlayer;
+
   @override
   void initState() {
     super.initState();
 
-    _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(color: AppConfig.primaryColor),
-      onRefresh: () async {
-        if (_webViewController != null) {
-          // await _webViewController!.loadUrl(
-          //   urlRequest: URLRequest(url: WebUri(AppConfig.webUrl)),
-          // );
+    _audioPlayer = AudioPlayer();
+    _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
+    _pullToRefreshController = PullToRefreshController(
+      settings: PullToRefreshSettings(
+        color: AppConfig.primaryColor,
+        enabled: true,
+      ),
+      onRefresh: () async {
+        debugPrint('🔄 [PullToRefresh] onRefresh triggered');
+        _playRefreshSound();
+        if (_webViewController != null) {
           // Reload the current page instead of going back to home
           await _webViewController!.reload();
         }
@@ -100,8 +107,21 @@ class _WebViewScreenState extends State<WebViewScreen> {
     }
   }
 
+  Future<void> _playRefreshSound() async {
+    try {
+      debugPrint('🔊 Playing refresh audio: audio/refresh_audio.mpeg');
+      await _audioPlayer.stop();
+      await _audioPlayer.setVolume(1.0);
+      await _audioPlayer.play(AssetSource('audio/refresh_audio.mpeg'));
+      debugPrint('🔊 Refresh sound played successfully');
+    } catch (e) {
+      debugPrint('❌ Error playing refresh audio: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _linkSubscription?.cancel();
     _connectivitySubscription?.cancel();
     super.dispose();
@@ -1432,7 +1452,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         allowFileAccess: true,
                         allowFileAccessFromFileURLs: true,
                         allowUniversalAccessFromFileURLs: true,
-                        useOnLoadResource: true,
+                        useOnLoadResource: false,
                         useShouldOverrideUrlLoading: true,
                       ),
                       // Offline
@@ -2063,30 +2083,33 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         }
                       },
                     ),
-                    // Loading indicator overlay - only show when loading
+                    // Loading indicator overlay - only show when initial page is loading
                     if (_isLoading)
                       Container(
-                        color: Colors.white.withOpacity(0.9),
-                        child: Center(
+                        color: Colors.white,
+                        child: const Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              CircularProgressIndicator(
-                                value: _loadingProgress < 1.0 &&
-                                        _loadingProgress > 0
-                                    ? _loadingProgress
-                                    : null,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppConfig.primaryColor),
+                              SizedBox(
+                                width: 32,
+                                height: 32,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF012710),
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: 14),
                               Text(
                                 'Loading...',
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppConfig.primaryColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF012710),
+                                  letterSpacing: 0.5,
+                                  ),
                               ),
                             ],
                           ),
