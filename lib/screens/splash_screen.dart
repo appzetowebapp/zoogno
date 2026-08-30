@@ -147,7 +147,7 @@ class _SplashScreenState extends State<SplashScreen>
   decoration: const BoxDecoration(
     color: Color(0xFF012710),
   ),
-),
+          ),
           // 2. Animated Floating Soft Glows
           AnimatedBuilder(
             animation: _backgroundController,
